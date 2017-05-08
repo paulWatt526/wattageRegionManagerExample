@@ -115,10 +115,6 @@ local function onFrame(event)
         local deltaTime = curTime - lastTime
         lastTime = curTime
 
-
-
-
-
         -- Get the direction vectors from the control stick
         local cappedPercentVector = controlStick.getCurrentValues().cappedDirectionVector
 
@@ -138,9 +134,6 @@ local function onFrame(event)
         local tileYCoord = playerY / TILE_SIZE
         regionManager.setCameraLocation(tileXCoord, tileYCoord)
 
---        cameraX = cameraX + 5 / 60
---        regionManager.setCameraLocation(cameraX, cameraX)
-
         -- Update the lighting model passing the amount of time that has passed since
         -- the last frame.
         lightingModel.update(deltaTime)
@@ -152,7 +145,6 @@ local function onFrame(event)
 
         -- This is the initial position of the camera
         regionManager.setCameraLocation(1.5,1.5)
---        camera.setZoom(0.3)
 
         -- Since a time delta cannot be calculated on the first frame, 1 is passed
         -- in here as a placeholder.
@@ -416,7 +408,6 @@ function scene:create( event )
 
     -- Move the player entity to the center of the middle cross.
     regionManager.centerEntityOnTile(2, playerEntityId, 1, 1)
---    regionManager.setEntityLocation(2, playerEntityId, 192, 64)
 
     local radius = 150
     controlStick = AnalogControlStick.new({
