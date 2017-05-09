@@ -37,5 +37,10 @@ settings =
 	},
 	plugins =
     {
+        ["plugin.wattageTileEngine"] =
+        {
+            -- required
+            publisherId = "com.blindprophetsoftware",
+        },
     },
 }
