@@ -6,7 +6,7 @@
         <key>texturePackerVersion</key>
         <string>4.2.2</string>
         <key>fileName</key>
-        <string>/Users/paul/IdeaProjects/wattageEndlessRunnerExample/art/tiles.tps</string>
+        <string>/Users/paul/IdeaProjects/wattageRegionManagerExample/art/tiles.tps</string>
         <key>autoSDSettings</key>
         <array>
             <struct type="AutoSDSettings">

@@ -481,6 +481,7 @@ function scene:create( event )
         tileSize = TILE_SIZE,
         spriteResolver = spriteResolver
     })
+    entityLayer.setLightingMode(TileEngine.LayerConstants.LIGHTING_MODE_NONE)   -- Lighting data not used.
 
     -- Add the entity layer to the module at index 2 (indexes start at 1, not 0).  Set
     -- the scaling delta to zero.
