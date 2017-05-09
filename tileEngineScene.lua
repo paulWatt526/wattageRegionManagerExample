@@ -111,6 +111,9 @@ spriteResolver.resolveForKey = function(key)
     }
 end
 
+-- -----------------------------------------------------------------------------------
+-- Handler for the zoom in button
+-- -----------------------------------------------------------------------------------
 local function zoomInHandler(event)
     -- If the control is already focused on a touch and this touch
     -- is not the current touch, exit early.
@@ -148,6 +151,9 @@ local function zoomInHandler(event)
     return true
 end
 
+-- -----------------------------------------------------------------------------------
+-- Handler for the zoom out button
+-- -----------------------------------------------------------------------------------
 local function zoomOutHandler(event)
     -- If the control is already focused on a touch and this touch
     -- is not the current touch, exit early.
