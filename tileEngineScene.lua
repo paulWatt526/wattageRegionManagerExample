@@ -72,8 +72,11 @@ local playerEntityId                        -- ID used to interact with the play
 local playerSprite                          -- Sprite for the player
 local lastTime                              -- Used to track how much time passes between frames
 local zoomInButton                          -- Reference to the zoom in button
-local zoomOutButton                          -- Reference to the zoom out button
+local zoomOutButton                         -- Reference to the zoom out button
 local curZoom                               -- The current camera zoom level
+local isZoomingIn                           -- Flag set when zooming in
+local isZoomingOut                          -- Flag set when zooming out
+local touchId                               -- Used to track touches on zoom buttons
 
 -- -----------------------------------------------------------------------------------
 -- This will load in the example sprite sheet.
@@ -109,17 +112,77 @@ spriteResolver.resolveForKey = function(key)
 end
 
 local function zoomInHandler(event)
-    curZoom = curZoom * 1.05
-    if curZoom > MAX_ZOOM then
-        curZoom = MAX_ZOOM
+    -- If the control is already focused on a touch and this touch
+    -- is not the current touch, exit early.
+    if touchId ~= nil and touchId ~= event.id then
+        return false
     end
+
+    if event.phase == "began" then
+        -- Touch has began
+
+        -- Store the ID of the touch
+        touchId = event.id
+
+        -- Set the focus of the current touch to this control exclusively.
+        display.getCurrentStage():setFocus(zoomInButton, touchId)
+
+        -- Set zoom flag to true
+        isZoomingIn = true
+    elseif event.phase == "moved" then
+        -- Touch has moved
+    elseif event.phase == "ended" or event.phase == "cancelled" then
+        -- Touch has ended or was cancelled
+
+        -- Remove the focus
+        display.getCurrentStage():setFocus(zoomInButton, nil)
+
+        -- Clear the touchID
+        touchId = nil
+
+        -- Set zoom flag to false
+        isZoomingIn = false
+    end
+
+    -- Indicate that the touch was handled by returning true
+    return true
 end
 
 local function zoomOutHandler(event)
-    curZoom = curZoom * 0.95
-    if curZoom < MIN_ZOOM then
-        curZoom = MIN_ZOOM
+    -- If the control is already focused on a touch and this touch
+    -- is not the current touch, exit early.
+    if touchId ~= nil and touchId ~= event.id then
+        return false
     end
+
+    if event.phase == "began" then
+        -- Touch has began
+
+        -- Store the ID of the touch
+        touchId = event.id
+
+        -- Set the focus of the current touch to this control exclusively.
+        display.getCurrentStage():setFocus(zoomOutButton, touchId)
+
+        -- Set zoom flag to true
+        isZoomingOut = true
+    elseif event.phase == "moved" then
+        -- Touch has moved
+    elseif event.phase == "ended" or event.phase == "cancelled" then
+        -- Touch has ended or was cancelled
+
+        -- Remove the focus
+        display.getCurrentStage():setFocus(zoomOutButton, nil)
+
+        -- Clear the touchID
+        touchId = nil
+
+        -- Set zoom flag to false
+        isZoomingOut = false
+    end
+
+    -- Indicate that the touch was handled by returning true
+    return true
 end
 
 -- -----------------------------------------------------------------------------------
@@ -165,6 +228,20 @@ local function onFrame(event)
         -- to local coordinate conversion.  Please reference
         -- the RegionManager usage guide for more info.
         regionManager.setCameraLocation(tileXCoord, tileYCoord)
+
+        -- Determine curZoom
+        if isZoomingIn then
+            curZoom = curZoom * 1.05
+            if curZoom > MAX_ZOOM then
+                curZoom = MAX_ZOOM
+            end
+        end
+        if isZoomingOut then
+            curZoom = curZoom * 0.95
+            if curZoom < MIN_ZOOM then
+                curZoom = MIN_ZOOM
+            end
+        end
 
         -- It is ok to set the zoom level directly on the camera when using the RegionManager
         camera.setZoom(curZoom)
@@ -482,14 +559,15 @@ function scene:create( event )
     zoomInButton.yScale = 0.5
     zoomInButton.x = display.screenOriginX + display.actualContentWidth - 200
     zoomInButton.y = display.screenOriginY + display.actualContentHeight - 75
-    zoomInButton:addEventListener("touch", zoomInHandler)
 
     zoomOutButton = display.newImageRect(sceneGroup, "img/minus.png", 200, 200)
     zoomOutButton.xScale = 0.5
     zoomOutButton.yScale = 0.5
     zoomOutButton.x = display.screenOriginX + display.actualContentWidth - 75
     zoomOutButton.y = display.screenOriginY + display.actualContentHeight - 75
-    zoomOutButton:addEventListener("touch", zoomOutHandler)
+
+    isZoomingIn = false
+    isZoomingOut = false
 end
 
 
@@ -507,6 +585,8 @@ function scene:show( event )
 
         -- Register the onFrame event handler to be called before each frame.
         Runtime:addEventListener( "enterFrame", onFrame )
+        zoomInButton:addEventListener("touch", zoomInHandler)
+        zoomOutButton:addEventListener("touch", zoomOutHandler)
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
     end
@@ -523,6 +603,17 @@ function scene:hide( event )
 
         -- Remove the onFrame event handler.
         Runtime:removeEventListener( "enterFrame", onFrame )
+
+        -- Remove zoom listeners
+        zoomInButton:removeEventListener("touch", zoomInHandler)
+        display.getCurrentStage():setFocus(zoomInButton, nil)
+        isZoomingIn = false
+
+        zoomOutButton:removeEventListener("touch", zoomOutHandler)
+        display.getCurrentStage():setFocus(zoomOutButton, nil)
+        isZoomingOut = false
+
+        touchId = nil
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
     end
