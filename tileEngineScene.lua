@@ -54,6 +54,8 @@ local REGION_WIDTH_IN_TILES = 3             -- The width in tiles for each sub-r
 local REGION_HEIGHT_IN_TILES = 3            -- The height in tiles for each sub-region
 local BUFFER_TILE_LAYER_INDEX = 1           -- The layer index for the buffer tile layer
 local ENTITY_LAYER_INDEX = 2                -- The layer index for the entity layer
+local MIN_ZOOM = 0.1                        -- The minimum zoom level of the camera
+local MAX_ZOOM = 2                          -- The maximum zoom level of the camera
 
 local TILE_SIZE         = 128               -- Constant for the tile size
 local BUFFER_LAYER_ROW_COUNT    = 180       -- Row count of the buffer layer
@@ -69,6 +71,9 @@ local controlStick                          -- Reference to the control stick
 local playerEntityId                        -- ID used to interact with the player entity
 local playerSprite                          -- Sprite for the player
 local lastTime                              -- Used to track how much time passes between frames
+local zoomInButton                          -- Reference to the zoom in button
+local zoomOutButton                          -- Reference to the zoom out button
+local curZoom                               -- The current camera zoom level
 
 -- -----------------------------------------------------------------------------------
 -- This will load in the example sprite sheet.
@@ -101,6 +106,20 @@ spriteResolver.resolveForKey = function(key)
         width = frame.width,
         height = frame.height
     }
+end
+
+local function zoomInHandler(event)
+    curZoom = curZoom * 1.05
+    if curZoom > MAX_ZOOM then
+        curZoom = MAX_ZOOM
+    end
+end
+
+local function zoomOutHandler(event)
+    curZoom = curZoom * 0.95
+    if curZoom < MIN_ZOOM then
+        curZoom = MIN_ZOOM
+    end
 end
 
 -- -----------------------------------------------------------------------------------
@@ -147,12 +166,18 @@ local function onFrame(event)
         -- the RegionManager usage guide for more info.
         regionManager.setCameraLocation(tileXCoord, tileYCoord)
 
+        -- It is ok to set the zoom level directly on the camera when using the RegionManager
+        camera.setZoom(curZoom)
+
         -- Update the lighting model passing the amount of time that has passed since
         -- the last frame.
         lightingModel.update(deltaTime)
     else
         -- This is the first call to onFrame, so lastTime needs to be initialized.
         lastTime = event.time
+
+        -- The initial camera zoom level is 1
+        curZoom = 1
 
         -- This is the initial position of the camera set using the RegionManager.
         -- Its initial value is centered on the player entity location.
@@ -450,6 +475,21 @@ function scene:create( event )
         centerDotRadius = 0.1 * radius,
         outerCircleRadius = radius
     })
+
+    -- Create the zoom buttons
+    zoomInButton = display.newImageRect(sceneGroup, "img/plus.png", 200, 200)
+    zoomInButton.xScale = 0.5
+    zoomInButton.yScale = 0.5
+    zoomInButton.x = display.screenOriginX + display.actualContentWidth - 200
+    zoomInButton.y = display.screenOriginY + display.actualContentHeight - 75
+    zoomInButton:addEventListener("touch", zoomInHandler)
+
+    zoomOutButton = display.newImageRect(sceneGroup, "img/minus.png", 200, 200)
+    zoomOutButton.xScale = 0.5
+    zoomOutButton.yScale = 0.5
+    zoomOutButton.x = display.screenOriginX + display.actualContentWidth - 75
+    zoomOutButton.y = display.screenOriginY + display.actualContentHeight - 75
+    zoomOutButton:addEventListener("touch", zoomOutHandler)
 end
 
 
@@ -494,6 +534,12 @@ function scene:destroy( event )
 
     local sceneGroup = self.view
     -- Code here runs prior to the removal of scene's view
+
+    -- Release the zoom buttons
+    zoomInButton:removeSelf()
+    zoomInButton = nil
+    zoomOutButton:removeSelf()
+    zoomOutButton = nil
 
     -- Destroy regionManager (NOTE: This may result in calls to regionReleased() listener function)
     regionManager.destroy()
